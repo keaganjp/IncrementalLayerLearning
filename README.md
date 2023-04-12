@@ -22,6 +22,7 @@ Optional parameters:
 
 ### Instructions for running the ILL benchmarking code:
 `python trainILL.py -dataset <name_of_dataset> -net <name_of_net>` (this can train a simple conv, vgg11 and vgg16 networks)
+
 `python resnet_ILL.py -dataset <name_of_dataset>` (this is for resnet18 exclusively)
 
 Datasets available:
