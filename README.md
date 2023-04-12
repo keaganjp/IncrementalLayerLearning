@@ -16,6 +16,8 @@ Networks available:
 - vgg16 
 - resnet18 
 
+To change the number of epochs, edit the EPOCH variable in conf/global_settings.py
+
 Optional parameters: 
 - `-gpu True` : to use GPU (default set to false) 
 - `-b` : specify the batch-size (delault is 128) 
@@ -37,4 +39,10 @@ Networks available:
 - simple (mostly for debugging) 
 - vgg11
 - vgg16 
+
+Optional parameters: 
+- `-gpu cuda:0` : to use GPU (default set to 'cpu') 
+- `-b` : specify the batch-size (delault is 128) 
+
+To change the number of epochs, you need to edit this in the ILLLayer.py file. Edit the num_epoch variable in the class definition of ILLConv2D and ILLLinearLayer. The learning rate can be changed in a similar manner. 
 
