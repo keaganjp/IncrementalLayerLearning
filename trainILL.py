@@ -311,7 +311,7 @@ if __name__ == '__main__':
     parser.add_argument('-dataset', type=str, required=True, help='select dataset')
     parser.add_argument('-net', type=str, required=True, help='net type')
     parser.add_argument('-b', type=int, default=128, help='batch size for dataloader')
-    parser.add_argument('-gpu', action='store_true', default='cpu', help='use gpu or not')
+    parser.add_argument('-gpu', default='cpu', help='use gpu or not')
     args = parser.parse_args()
     input_size = [3, 256, 256]
     num_classes = 10
