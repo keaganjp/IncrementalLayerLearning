@@ -1,7 +1,4 @@
 """resnet in pytorch
-
-
-
 [1] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun.
 
     Deep Residual Learning for Image Recognition
@@ -302,7 +299,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-dataset', type=str, required=True, help='select dataset')
     parser.add_argument('-b', type=int, default=128, help='batch size for dataloader')
-    parser.add_argument('-gpu', action='store_true', default='cpu', help='use gpu or not')
+    parser.add_argument('-gpu', default='cpu', help='use gpu or not')
     args = parser.parse_args()
 
     torch.manual_seed(1234)
