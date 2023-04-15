@@ -216,7 +216,7 @@ class ILLNet(torch.nn.Module):
                 print(current_trained_layers)
                 acc, acc_final = self.eval_training(training_loader, current_trained_layers, True)
                 acc_test, acc_test_final = self.eval_training(test_loader, current_trained_layers, False)
-                with open(filename, "w") as f:
+                with open(filename, "a") as f:
                         f.write("Training accuracy is {:.3f} after training layer {} \n".format(acc*100.0, layer))
                         f.write("Training accuracy is {:.3f} after training layer {} while considering only the final predictor layer\n".format(acc_final*100.0, layer))
                         f.write("Testing accuracy is {:.3f} after training layer {} \n".format(acc_test*100.0, layer))
@@ -444,7 +444,7 @@ if __name__ == '__main__':
     print("Train Accuracy:", train_accuracy, '%')
     print("Train Error   :", round(100 - train_accuracy,3), '%')
 
-    with open(filename, "w") as f:
+    with open(filename, "a") as f:
         f.write("The final training accuracy after {} epochs is: {:.3f}\n".format(epochs, train_accuracy))
 
     test_acc = net.eval_training(test_loader, [], check_train=False)
@@ -452,13 +452,11 @@ if __name__ == '__main__':
     print("Test Accuracy:", test_accuracy, '%')
     print("Test Error   :", round(100 - test_accuracy,3), '%')
 
-    with open(filename, "w") as f:
+    with open(filename, "a") as f:
         f.write("The final testing accuracy after {} epochs is: {:.3f}\n".format(epochs, test_accuracy))
-
+        f.close()
     pickle_file = 'ILL_'+ args.dataset + '_' + args.net + '.pickle'
     with open(pickle_file, 'wb') as p: 
         pickle.dump(net, p)
-    with open(filename, "w") as f:
-        f.close()
 
     writer.close()
