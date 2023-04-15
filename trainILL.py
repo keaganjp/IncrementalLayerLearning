@@ -4,6 +4,7 @@ import argparse
 import time
 from datetime import datetime
 import pickle 
+from tqdm import tqdm 
 
 import numpy as np
 import torch
@@ -90,6 +91,7 @@ class ILLNet(torch.nn.Module):
                        self.pool,
                        self.flat, 
                        self.fc1, 
+
                        self.fc2, 
                        self.fc3]
             self.trainableList = [self.conv1, 
@@ -166,6 +168,7 @@ class ILLNet(torch.nn.Module):
                        self.batchnorm512,
                        self.conv9,
                        self.batchnorm512,
+
                        self.conv10,
                        self.batchnorm512,
                        self.pool,
@@ -209,27 +212,31 @@ class ILLNet(torch.nn.Module):
                 print("Training Layer", layer + 1)
                 previousLayers = self.layers[:layer]
                 self.layers[layer].trainLayer(dataloader, previousLayers, device, writer, filename)
-            acc, acc_final = self.eval_training(training_loader, 'true')
-            acc_test, acc_test_final = self.eval_training(test_loader, 'false')
-            with open(filename, "w") as f:
-                f.write("Training accuracy is {:.3f} after training layer {} \n".format(acc*100.0, layer))
-                f.write("Training accuracy is {:.3f} after training layer {} \n while considering only the final predictor layer".format(acc_final*100.0, layer))
-                f.write("Testing accuracy is {:.3f} after training layer {} \n".format(acc_test*100.0, layer))
-                f.write("Testing accuracy is {:.3f} after training layer {} \n while considering only the final predictor layer".format(acc_test_final*100.0, layer))
+                current_trained_layers = self.layers[:layer+1]
+                print(current_trained_layers)
+                acc, acc_final = self.eval_training(training_loader, current_trained_layers, True)
+                acc_test, acc_test_final = self.eval_training(test_loader, current_trained_layers, False)
+                with open(filename, "w") as f:
+                        f.write("Training accuracy is {:.3f} after training layer {} \n".format(acc*100.0, layer))
+                        f.write("Training accuracy is {:.3f} after training layer {} while considering only the final predictor layer\n".format(acc_final*100.0, layer))
+                        f.write("Testing accuracy is {:.3f} after training layer {} \n".format(acc_test*100.0, layer))
+                        f.write("Testing accuracy is {:.3f} after training layer {} while considering only the final predictor layer\n".format(acc_test_final*100.0, layer))
 
 
     # Predict on a batch
-    def predict(self, x):
+    def predict(self, x, current_trained_layers):
         # get per layer logits
         layerPreds = []
+        currentlayerPreds = []
         layerOutputs = []
         layerInput = x
-        for layer in self.layers:
+        for layer in current_trained_layers:
             if layer not in self.trainableList:
                 layerInput = layer.forward(layerInput)
             else:
                 layerOutput, layerPred = layer.forward(layerInput)
                 # Get per layer softmax
+                currentlayerPreds.append(layerPred)
                 layerOutputs.append(layerOutput)
                 layerPreds.append(F.softmax(layerPred, dim=1))
                 layerInput = layerOutput
@@ -241,10 +248,11 @@ class ILLNet(torch.nn.Module):
         return layerOutput, finalPred, finallayerpred
     
     @torch.no_grad()        
-    def eval_training(self, test_loader, check_train):
+    def eval_training(self, test_loader, current_trained_layers, check_train=True):
 
         start = time.time()
-
+        if current_trained_layers == []: 
+          current_trained_layers = self.layers
         test_loss = 0.0 # cost function error
         correct = 0.0
         correct_finallayer = 0.0
@@ -255,8 +263,8 @@ class ILLNet(torch.nn.Module):
                 images = images.cuda()
                 labels = labels.cuda()
 
-            outputs, preds, finallayerpreds = self.predict(images)
-            loss = criterion(outputs, labels)
+            outputs, preds, finallayerpreds = self.predict(images, current_trained_layers)
+            loss = criterion(preds, labels)
             test_loss += loss.item()
             #_, preds = self.predict(images)
             _, predicted = torch.max(preds, 1)
@@ -265,29 +273,25 @@ class ILLNet(torch.nn.Module):
             correct_finallayer += (predicted_final == labels).sum().item()
 
         finish = time.time()
-        if args.gpu == 'cuda:0':
-            print('GPU INFO.....')
-            print(torch.cuda.memory_summary(), end='')
-        print('Evaluating Network.....')
-        print('Test set: Average loss: {:.4f}, Accuracy: {:.4f}, Time consumed:{:.2f}s (combined prediction)'.format(
-            test_loss / len(test_loader.dataset),
-            correct / len(test_loader.dataset),
-            finish - start
-        ))   
-        print('Test set: Average loss: {:.4f}, Accuracy: {:.4f}, Time consumed:{:.2f}s (final layer prediction)'.format(
+        if check_train:
+            print('Evaluating Network on train dataset.....')
+            writer.add_scalar('Train/Accuracy', correct/ len(test_loader.dataset))
+            writer.add_scalar('Train/Accuracy_with_finalPred', correct_finallayer/ len(test_loader.dataset))
+            print('Training set: Average loss: {:.4f}, Accuracy: {:.4f}, Time consumed:{:.2f}s (combined prediction)\n'.format(
+            test_loss/len(test_loader.dataset), correct / len(test_loader.dataset), finish - start))
+            print('Training set: Average loss: {:.4f}, Accuracy: {:.4f}, Time consumed:{:.2f}s (final layer prediction)\n'.format(
             test_loss / len(test_loader.dataset),
             correct_finallayer / len(test_loader.dataset),
             finish - start
-        ))      
-
-        #add informations to tensorboard
-        if check_train == 'false':
+        )) 
+        else: 
+            print('Evaluating Network on test dataset.....')
             writer.add_scalar('Test/Average loss', test_loss / len(test_loader.dataset))
             writer.add_scalar('Test/Accuracy', correct / len(test_loader.dataset))
-        else: 
-            writer.add_scalar('Train/Accuracy', correct/ len(test_loader.dataset))
-            writer.add_scaler('Train/Accuracy_with_finalPred', correct_finallayer/ len(test_loader.dataset))
-        return correct / len(test_loader.dataset), correct_finallayer / len(test_loader.dataset)
+            print('Test set: Average loss: {:.4f}, Accuracy: {:.4f}, Time consumed:{:.2f}s (combined prediction) \n'.format(test_loss / len(test_loader.dataset),correct / len(test_loader.dataset),finish - start))
+            print('Test set: Average loss: {:.4f}, Accuracy: {:.4f}, Time consumed:{:.2f}s (final layer prediction)     \n'.format(test_loss / len(test_loader.dataset),correct_finallayer / len(test_loader.dataset),finish - start))    
+    
+        return correct / len(test_loader.dataset), correct_finallayer / len(test_loader.dataset)   
     
     # Evaluate on loader
     '''def evaluate(self, loader):
@@ -352,6 +356,7 @@ if __name__ == '__main__':
         )
 
     elif args.dataset == 'CIFAR10':
+        input_size = [3, 224, 224]
         training_loader = get_training_dataloader(args,
         settings.CIFAR10_TRAIN_MEAN,
         settings.CIFAR10_TRAIN_STD,
@@ -422,6 +427,7 @@ if __name__ == '__main__':
         raise Exception('Dataset not valid')
 
     net = ILLNet(args, input_size=input_size, num_classes=num_classes)
+
     epochs = 2
 
     writer = SummaryWriter(log_dir=os.path.join(
@@ -433,7 +439,7 @@ if __name__ == '__main__':
 
     net.train(training_loader, writer, filename)
 
-    train_acc = net.eval_training(training_loader, 'true')
+    train_acc = net.eval_training(training_loader, [], check_train=True)
     train_accuracy = round(train_acc*100, 3)
     print("Train Accuracy:", train_accuracy, '%')
     print("Train Error   :", round(100 - train_accuracy,3), '%')
@@ -441,7 +447,7 @@ if __name__ == '__main__':
     with open(filename, "w") as f:
         f.write("The final training accuracy after {} epochs is: {:.3f}\n".format(epochs, train_accuracy))
 
-    test_acc = net.eval_training(test_loader, 'false')
+    test_acc = net.eval_training(test_loader, [], check_train=False)
     test_accuracy = round(test_acc*100, 3)
     print("Test Accuracy:", test_accuracy, '%')
     print("Test Error   :", round(100 - test_accuracy,3), '%')

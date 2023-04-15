@@ -10,6 +10,7 @@ Original file is located at
 import matplotlib.pyplot as plt
 import torch
 import time 
+from tqdm import tqdm 
 
 import torch.nn as nn
 import torch.nn.functional as F
@@ -27,7 +28,7 @@ from math import floor
 # The basic linear layer
 class ILLLinearLayer(nn.Linear):
     def __init__(self, in_features, out_features, layer_lr = 0.005,
-                 num_classes = 10, num_epochs = 1,
+                 num_classes = 10, num_epochs = 10,
                  bias=True, device=None, dtype=None):
         super().__init__(in_features, out_features, bias, device, dtype)
         self.relu = torch.nn.ReLU()
@@ -50,7 +51,7 @@ class ILLLinearLayer(nn.Linear):
     # if dict:
     # each element is output of i'th layer : input of j'th layer)
     def trainLayer(self, dataloader, previousLayers, device, writer, filename, resnet_skips = None):
-        for epoch in range(self.num_epochs):
+        for epoch in tqdm(range(self.num_epochs)):
             criterion = nn.CrossEntropyLoss()
             start = time.time()
             for i, data in enumerate(dataloader):
@@ -96,7 +97,7 @@ class ILLConv2D(nn.Conv2d):
     def __init__(self, in_channels, out_channels, kernel_size,
                  sampleInput,
                  stride=1, padding=1, dilation=1, groups=1, 
-                 num_epochs = 1, layer_lr = 0.005, num_classes = 10,
+                 num_epochs = 10, layer_lr = 0.005, num_classes = 10,
                  bias=True, padding_mode='zeros', device=None, dtype=None):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding, 
                         dilation, groups, bias, padding_mode, device, dtype)
@@ -134,7 +135,7 @@ class ILLConv2D(nn.Conv2d):
     # if dict:
     # each element is output of i'th layer : input of j'th layer)
     def trainLayer(self, dataloader, previousLayers, device, writer, filename, resnet_skips=None):
-        for epoch in range(self.num_epochs):
+        for epoch in tqdm(range(self.num_epochs)):
             criterion = nn.CrossEntropyLoss()
             start = time.time()
             for i, data in enumerate(dataloader):
