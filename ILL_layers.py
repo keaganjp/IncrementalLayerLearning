@@ -147,7 +147,7 @@ class ILLConv2D(nn.Conv2d):
                   skip_input = None
                   skip_target = None
                   for previous in previousLayers:
-                    if isinstance(previous, nn.MaxPool2d) or isinstance(previous, nn.Flatten)  or isinstance(previous, nn.AvgPool2d) or isinstance(previous, nn.BatchNorm2d):
+                    if isinstance(previous, nn.MaxPool2d) or isinstance(previous, nn.Flatten)  or isinstance(previous, nn.AvgPool2d) or isinstance(previous, nn.BatchNorm2d) or isinstance(previous, nn.Dropout):
                         if skip_target is not None and skip_target == layer_counter:
                             inputs =  previous.forward(inputs+skip_input)
                         else:

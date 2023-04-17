@@ -391,14 +391,14 @@ if __name__ == '__main__':
     
     elif args.dataset == 'CUB':
         num_classes = 200
-        training_loader = get_training_dataloader(
+        training_loader = get_training_dataloader(args,
         settings.CALTECH256_TRAIN_MEAN,
         settings.CALTECH256_TRAIN_STD,
         num_workers=4,
         batch_size=args.b,
         shuffle=True
         )
-        test_loader = get_test_dataloader(
+        test_loader = get_test_dataloader(args,
         settings.CALTECH256_TRAIN_MEAN,
         settings.CALTECH256_TRAIN_STD,
         num_workers=4,
@@ -431,7 +431,7 @@ if __name__ == '__main__':
     epochs = 2
 
     writer = SummaryWriter(log_dir=os.path.join(
-            settings.LOG_DIR, args.net, settings.TIME_NOW))
+            settings.LOG_DIR, args.net, args.dataset, settings.TIME_NOW))
 
     filename = 'ILL_'+ args.dataset + '_' + args.net + '.txt'
     with open(filename, "w") as f:

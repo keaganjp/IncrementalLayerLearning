@@ -167,7 +167,7 @@ def get_test_dataloader(args, mean, std, batch_size=16, num_workers=2, shuffle=T
         transforms.Normalize(mean, std)
         ])
     elif "CIFAR10" in args.dataset:
-        transform_train = transforms.Compose([
+        transform_test = transforms.Compose([
   	    transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
