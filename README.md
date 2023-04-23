@@ -8,8 +8,9 @@ Datasets available:
 - FashionMNIST
 - CIFAR10
 - CIFAR100
-- CUB 
-- Food101
+- OxfordIIIT Pets
+- BloodMNIST
+- GTSRB
 
 Networks available: 
 - vgg11
@@ -32,13 +33,16 @@ Datasets available:
 - FashionMNIST
 - CIFAR10
 - CIFAR100
-- CUB 
-- Food101
+- OxfordIIIT Pets
+- BloodMNIST
+- GTSRB
 
 Networks available: 
 - simple (mostly for debugging) 
 - vgg11
 - vgg16 
+
+(resnet18 is in a different file as mentioned above)
 
 Optional parameters: 
 - `-gpu cuda:0` : to use GPU (default set to 'cpu') 
