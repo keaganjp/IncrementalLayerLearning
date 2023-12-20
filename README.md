@@ -1,5 +1,7 @@
 ## Incremental Layer Learning
 
+Project in collaboration with: https://github.com/Maithilishetty/IncrementalLayerLearning
+
 ### Instructions for running the backpropagation benchmarking code:
 `python trainBP.py -dataset <name_of_dataset> -net <name_of_net>`
 
